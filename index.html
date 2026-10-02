@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>世界の国旗当てクイズ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+        }
+        .animate-bounce-short {
+            animation: bounce 0.5s ease infinite alternate;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="w-full max-w-4xl mx-auto px-4 py-4 flex justify-between items-center border-b border-slate-800">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="showScreen('start-screen')">
+            <i class="fa-solid me-1 fa-earth-americas text-indigo-400 text-2xl"></i>
+            <h1 class="text-xl font-extrabold tracking-wide bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+                国旗マスター
+            </h1>
+        </div>
+        <div class="flex items-center gap-4 text-sm font-bold">
+            <div class="bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-fire text-orange-500"></i>
+                <span id="streak-count">0</span> 連続
+            </div>
+            <div class="bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-yellow-400"></i>
+                <span id="high-score">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="w-full max-w-2xl mx-auto px-4 py-6 flex-1 flex flex-col justify-center">
+
+        <!-- 1. START / SETTINGS SCREEN -->
+        <div id="start-screen" class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-3xl p-6 md:p-8 shadow-2xl">
+            <div class="text-center mb-8">
+                <span class="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold mb-3 border border-indigo-500/30">
+                    🌍 フラッグ・チャレンジ
+                </span>
+                <h2 class="text-3xl font-extrabold mb-2">世界の国旗当てクイズ</h2>
+                <p class="text-slate-400 text-sm">国旗を見て正しい国名を当てよう！全問正解を目指そう。</p>
+            </div>
+
+            <!-- Settings -->
+            <div class="space-y-6">
+                <!-- Difficulty -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">難易度</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="selectDifficulty('easy')" id="btn-diff-easy" class="diff-btn py-2.5 px-4 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm text-center transition">初級</button>
+                        <button onclick="selectDifficulty('medium')" id="btn-diff-medium" class="diff-btn py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">中級</button>
+                        <button onclick="selectDifficulty('hard')" id="btn-diff-hard" class="diff-btn py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">上級</button>
+                    </div>
+                </div>
+
+                <!-- Region -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">地域（大陸）</label>
+                    <select id="region-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-indigo-500 transition">
+                        <option value="all">🌏 全世界</option>
+                        <option value="アジア">アジア</option>
+                        <option value="ヨーロッパ">ヨーロッパ</option>
+                        <option value="アメリカ">南北アメリカ</option>
+                        <option value="アフリカ">アフリカ</option>
+                        <option value="オセアニア">オセアニア</option>
+                    </select>
+                </div>
+
+                <!-- Game Mode -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">モード</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="selectMode('standard')" id="btn-mode-standard" class="mode-btn py-3 px-4 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-list-check text-indigo-400"></i> 10問チャレンジ
+                        </button>
+                        <button onclick="selectMode('timeattack')" id="btn-mode-timeattack" class="mode-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-stopwatch text-rose-400"></i> 60秒タイムアタック
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="w-full mt-8 py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-indigo-500/25 transition active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> クイズスタート
+            </button>
+        </div>
+
+        <!-- 2. QUIZ GAME SCREEN -->
+        <div id="game-screen" class="hidden space-y-4">
+            <!-- Game Header Stats -->
+            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex justify-between items-center text-sm font-bold">
+                <div class="flex items-center gap-2">
+                    <span id="question-tracker" class="text-indigo-400 font-extrabold text-lg">第 1 問 / 10</span>
+                </div>
+                <div id="timer-box" class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <i class="fa-solid fa-clock text-indigo-400"></i>
+                    <span id="timer-display">--</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-slate-400">スコア:</span>
+                    <span id="current-score" class="text-emerald-400 font-extrabold text-lg">0</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
+                <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-cyan-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Main Question Card -->
+            <div id="quiz-card" class="bg-slate-800/90 border border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col items-center">
+                <!-- Flag Image Container -->
+                <div class="relative group my-4">
+                    <div class="w-64 h-40 sm:w-80 sm:h-48 bg-slate-900 border-4 border-slate-700 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center">
+                        <img id="flag-img" src="" alt="国旗" class="w-full h-full object-cover transition duration-300">
+                    </div>
+                </div>
+
+                <!-- Hint Button & Display -->
+                <div class="w-full mb-4 flex flex-col items-center">
+                    <button onclick="toggleHint()" id="hint-btn" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 bg-indigo-500/10 px-3 py-1.5 rounded-full border border-indigo-500/20 transition">
+                        <i class="fa-regular fa-lightbulb"></i> ヒントを見る
+                    </button>
+                    <p id="hint-text" class="hidden text-xs text-amber-300 font-bold mt-2 bg-amber-500/10 px-3 py-1.5 rounded-lg border border-amber-500/20"></p>
+                </div>
+
+                <!-- 4 Options Grid -->
+                <div id="options-container" class="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                    <!-- Dynamic option buttons inserted here -->
+                </div>
+            </div>
+
+            <!-- Explanation Modal / Card -->
+            <div id="explanation-box" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-xl animate-fade-in">
+                <div class="flex items-start justify-between mb-2">
+                    <div>
+                        <span id="result-badge" class="px-2.5 py-1 rounded-md text-xs font-bold inline-block mb-1">正解！</span>
+                        <h3 id="country-title" class="text-xl font-extrabold text-white"></h3>
+                    </div>
+                    <button onclick="nextQuestion()" class="py-2.5 px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition flex items-center gap-2 shadow-lg shadow-indigo-500/30">
+                        次へ進む <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="text-xs text-slate-300 space-y-1 border-t border-slate-700 pt-3 mt-2">
+                    <p><span class="text-slate-400">首都:</span> <strong id="country-capital" class="text-slate-100"></strong></p>
+                    <p><span class="text-slate-400">地域:</span> <span id="country-continent" class="text-slate-100"></span></p>
+                    <p class="mt-2 text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 leading-relaxed" id="country-fact"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. RESULT SCREEN -->
+        <div id="result-screen" class="hidden bg-slate-800/80 backdrop-blur border border-slate-700 rounded-3xl p-6 md:p-8 shadow-2xl text-center">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-indigo-500/20 border-2 border-indigo-500 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold mb-1">リザルト</h2>
+                <p class="text-slate-400 text-sm">クイズお疲れ様でした！</p>
+            </div>
+
+            <!-- Score Cards -->
+            <div class="grid grid-cols-3 gap-3 mb-8">
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
+                    <span class="text-xs text-slate-400 font-bold block mb-1">獲得スコア</span>
+                    <span id="final-score" class="text-2xl font-extrabold text-indigo-400">0</span>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
+                    <span class="text-xs text-slate-400 font-bold block mb-1">正解率</span>
+                    <span id="final-accuracy" class="text-2xl font-extrabold text-emerald-400">0%</span>
+                </div>
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700">
+                    <span class="text-xs text-slate-400 font-bold block mb-1">最大コンボ</span>
+                    <span id="final-streak" class="text-2xl font-extrabold text-orange-400">0</span>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="space-y-3">
+                <button onclick="startGame()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-extrabold text-base shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> 同じ設定でもう一度
+                </button>
+                <button onclick="showScreen('start-screen')" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-2xl font-bold text-sm transition">
+                    設定を変えて挑戦する
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-4xl mx-auto px-4 py-4 text-center text-xs text-slate-500">
+        世界の国旗当てクイズ &copy; 2026 - Powered by FlagCDN
+    </footer>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        // Database of Countries
+        const countryData = [
+            // Easy
+            { code: 'jp', name: '日本', capital: '東京', continent: 'アジア', difficulty: 'easy', fact: 'アジア東部に位置する島国で、富士山や桜、伝統文化と最先端技術の融合で有名です。' },
+            { code: 'us', name: 'アメリカ合衆国', capital: 'ワシントンD.C.', continent: 'アメリカ', difficulty: 'easy', fact: '50の州からなる連邦共和国で、星条旗の50個の星は現在の州の数を表しています。' },
+            { code: 'fr', name: 'フランス', capital: 'パリ', continent: 'ヨーロッパ', difficulty: 'easy', fact: '青・白・赤の三色旗（トリコロール）は「自由・平等・友愛」を象徴しています。' },
+            { code: 'gb', name: 'イギリス', capital: 'ロンドン', continent: 'ヨーロッパ', difficulty: 'easy', fact: 'ユニオンジャックと呼ばれる国旗は、イングランド、スコットランド、北アイルランドの旗が合体したものです。' },
+            { code: 'de', name: 'ドイツ', capital: 'ベルリン', continent: 'ヨーロッパ', difficulty: 'easy', fact: '黒・赤・金の横三色旗で、ヨーロッパ最大の経済規模を誇る連邦共和国です。' },
+            { code: 'it', name: 'イタリア', capital: 'ローマ', continent: 'ヨーロッパ', difficulty: 'easy', fact: '緑・白・赤の縦三色旗。ピザやパスタなどの食文化や古代ローマ遺産で有名です。' },
+            { code: 'cn', name: '中国', capital: '北京', continent: 'アジア', difficulty: 'easy', fact: '五星紅旗（ごせいこうき）と呼ばれ、大きな星は共産党、小さな4つの星は国民を表しています。' },
+            { code: 'kr', name: '韓国', capital: 'ソウル', continent: 'アジア', difficulty: 'easy', fact: '太極旗（テグッキ）と呼ばれ、中央の太極模様と周囲の四卦が陰陽の調和を表しています。' },
+            { code: 'ca', name: 'カナダ', capital: 'オタワ', continent: 'アメリカ', difficulty: 'easy', fact: '中央に赤いカエデ（メープル）の葉が大きく描かれているのが特徴的な国旗です。' },
+            { code: 'br', name: 'ブラジル', capital: 'ブラジリア', continent: 'アメリカ', difficulty: 'easy', fact: '緑は豊かな森林、黄色のひし形は鉱物資源、中央の青い球体はブラジルの夜空を表しています。' },
+            { code: 'au', name: 'オーストラリア', capital: 'キャンベラ', continent: 'オセアニア', difficulty: 'easy', fact: '左上にイギリスのユニオンジャック、右側に南十字星が描かれています。' },
+            { code: 'in', name: 'インド', capital: 'ニューデリー', continent: 'アジア', difficulty: 'easy', fact: 'オレンジ・白・緑の横三色で、中央には法輪（アショーカー・チャクラ）が描かれています。' },
+            { code: 'eg', name: 'エジプト', capital: 'カイロ', continent: 'アフリカ', difficulty: 'easy', fact: '中央に「サラーフッディーンのタカ」と呼ばれる金の紋章が描かれています。' },
+            { code: 'es', name: 'スペイン', capital: 'マドリード', continent: 'ヨーロッパ', difficulty: 'easy', fact: '赤と黄の情熱的なカラーリングで、左側に国章が配置されています。' },
+            { code: 'ru', name: 'ロシア', capital: 'モスクワ', continent: 'ヨーロッパ', difficulty: 'easy', fact: '白・青・赤の横三色旗で、多くのスラブ系国家の国旗のモデルとなりました。' },
+
+            // Medium
+            { code: 'mx', name: 'メキシコ', capital: 'メキシコシティ', continent: 'アメリカ', difficulty: 'medium', fact: '中央の国章には、サボテンの上に止まり蛇をくわえるワシが描かれています。' },
+            { code: 'ar', name: 'アルゼンチン', capital: 'ブエノスアイレス', continent: 'アメリカ', difficulty: 'medium', fact: '水色と白の横縞の中央に「五月の太陽」と呼ばれる顔のある太陽が描かれています。' },
+            { code: 'se', name: 'スウェーデン', capital: 'ストックホルム', continent: 'ヨーロッパ', difficulty: 'medium', fact: '青地に黄色のスカンジナビア十字（スカンジナビアン・クロス）が描かれています。' },
+            { code: 'nl', name: 'オランダ', capital: 'アムステルダム', continent: 'ヨーロッパ', difficulty: 'medium', fact: '赤・白・青の横三色旗で、世界で最も古い三色旗の一つです。' },
+            { code: 'th', name: 'タイ', capital: 'バンコク', continent: 'アジア', difficulty: 'medium', fact: 'トンラクロン（三色旗）と呼ばれ、赤は国民、白は宗教、紺は国王を表しています。' },
+            { code: 'vn', name: 'ベトナム', capital: 'ハノイ', continent: 'アジア', difficulty: 'medium', fact: '金星紅旗と呼ばれ、赤地は革命、中央の黄色い大きな五芒星は国民の団結を表します。' },
+            { code: 'ch', name: 'スイス', capital: 'ベルン', continent: 'ヨーロッパ', difficulty: 'medium', fact: '珍しい正方形の国旗で、赤地に白い十字が描かれています。赤十字の標章の元になりました。' },
+            { code: 'gr', name: 'ギリシャ', capital: 'アテネ', continent: 'ヨーロッパ', difficulty: 'medium', fact: '青と白の9本の縞模様は「自由か死か」というギリシャ語の9シラブルを表しています。' },
+            { code: 'tr', name: 'トルコ', capital: 'アンカラ', continent: 'アジア', difficulty: 'medium', fact: '赤地に白い新月と星が描かれた旗で、「新月旗」として知られています。' },
+            { code: 'za', name: '南アフリカ', capital: 'プレトリア', continent: 'アフリカ', difficulty: 'medium', fact: '1994年のアパルトヘイト撤廃後に採用された、6色を使ったカラフルな国旗です。' },
+            { code: 'sg', name: 'シンガポール', capital: 'シンガポール', continent: 'アジア', difficulty: 'medium', fact: '赤と白の横二色で、左上に三日月と5つの星が描かれています。' },
+            { code: 'ph', name: 'フィリピン', capital: 'マニラ', continent: 'アジア', difficulty: 'medium', fact: '平和時は青が上ですが、戦争状態になると赤が上になる世界的にも珍しい特徴があります。' },
+            { code: 'id', name: 'インドネシア', capital: 'ジャカルタ', continent: 'アジア', difficulty: 'medium', fact: '赤と白の横二色旗。モナコの国旗とデザインが非常に酷似しています。' },
+            { code: 'nz', name: 'ニュージーランド', capital: 'ウェリントン', continent: 'オセアニア', difficulty: 'medium', fact: 'オーストラリアの旗に似ていますが、南十字星の星が赤い4つの五角星になっています。' },
+            { code: 'be', name: 'ベルギー', capital: 'ブリュッセル', continent: 'ヨーロッパ', difficulty: 'medium', fact: '黒・黄・赤の縦三色旗で、フランスの三色旗を参考に作られました。' },
+            { code: 'pl', name: 'ポーランド', capital: 'ワルシャワ', continent: 'ヨーロッパ', difficulty: 'medium', fact: '白と赤の横二色旗で、インドネシアやモナコの国旗と色が上下逆の関係にあります。' },
+            { code: 'my', name: 'マレーシア', capital: 'クアラルンプール', continent: 'アジア', difficulty: 'medium', fact: '14本の赤白の条文と、青地に三日月と14線の星が描かれています。' },
+            { code: 'ie', name: 'アイルランド', capital: 'ダブリン', continent: 'ヨーロッパ', difficulty: 'medium', fact: '緑・白・オレンジの縦三色旗で、緑はカトリック、オレンジはプロテスタントを表します。' },
+
+            // Hard
+            { code: 'np', name: 'ネパール', capital: 'カトマンズ', continent: 'アジア', difficulty: 'hard', fact: '世界で唯一、四角形ではない国旗（2つの三角形を重ねた形）として有名です。' },
+            { code: 'ke', name: 'ケニア', capital: 'ナイロビ', continent: 'アフリカ', difficulty: 'hard', fact: '中央に伝統的なマサイ族の盾と交差した2本の槍が描かれています。' },
+            { code: 'ma', name: 'モロッコ', capital: 'ラバト', continent: 'アフリカ', difficulty: 'hard', fact: '赤地の中央に「ソロモンの印章」と呼ばれる緑の五芒星が配置されています。' },
+            { code: 'pe', name: 'ペルー', capital: 'リマ', continent: 'アメリカ', difficulty: 'hard', fact: '赤・白・赤の縦三色旗で、赤は独立のための血、白は平和を表しています。' },
+            { code: 'cl', name: 'チリ', capital: 'サンティアゴ', continent: 'アメリカ', difficulty: 'hard', fact: '白・赤の横二色に、左上の青い正方形の中に白い星が配置されています。' },
+            { code: 'co', name: 'コロンビア', capital: 'ボゴタ', continent: 'アメリカ', difficulty: 'hard', fact: '黄色、青、赤の横三色で、黄色の幅が全体の半分を占めています。' },
+            { code: 'at', name: 'オーストリア', capital: 'ウィーン', continent: 'ヨーロッパ', difficulty: 'hard', fact: '赤・白・赤の横三色旗で、デンマークに次いで世界で二番目に古い国旗とされます。' },
+            { code: 'pt', name: 'ポルトガル', capital: 'リスボン', continent: 'ヨーロッパ', difficulty: 'hard', fact: '緑（希望）と赤（血）の非対称な背景に、伝統的な天球儀と紋章が描かれています。' },
+            { code: 'fi', name: 'フィンランド', capital: 'ヘルシンキ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '白地に青いスカンジナビア十字で、白は雪、青は湖と空を表しています。' },
+            { code: 'no', name: 'ノルウェー', capital: 'オスロ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '赤地に青と白の二重のスカンジナビア十字が描かれています。' },
+            { code: 'bt', name: 'ブータン', capital: 'ティンプー', continent: 'アジア', difficulty: 'hard', fact: '黄色とオレンジの対角線の背景に、純白の龍（雷龍）が描かれています。' },
+            { code: 'mn', name: 'モンゴル', capital: 'ウランバートル', continent: 'アジア', difficulty: 'hard', fact: '左側の赤地に「ソヨンボ」と呼ばれる伝統的なシンボルマークが描かれています。' },
+            { code: 'lk', name: 'スリランカ', capital: 'スリジャヤワルダナプラコッテ', continent: 'アジア', difficulty: 'hard', fact: '右側に剣を持つライオン、四隅に菩提樹の葉が配置された特徴的なデザインです。' },
+            { code: 'uz', name: 'ウズベキスタン', capital: 'タシュケント', continent: 'アジア', difficulty: 'hard', fact: '水色・白・緑の三色に赤の細線があり、左上には三日月と12個の星が描かれています。' },
+            { code: 'kz', name: 'カザフスタン', capital: 'アスタナ', continent: 'アジア', difficulty: 'hard', fact: '水色の地色に、中央の黄金の太陽とワシ、左端の伝統的な文様が印象的な国旗です。' },
+            { code: 'kg', name: 'キルギス', capital: 'ビシュケク', continent: 'アジア', difficulty: 'hard', fact: '赤地の中央に40本の光線を持つ黄色い太陽と、伝統的な移動式住居（ユルタ）の天井模様が描かれています。' },
+            { code: 'tj', name: 'タジキスタン', capital: 'ドゥシャンベ', continent: 'アジア', difficulty: 'hard', fact: '赤・白・緑の横三色の中央に、7つの星と王冠の紋章が配置されています。' },
+            { code: 'lb', name: 'レバノン', capital: 'ベイルート', continent: 'アジア', difficulty: 'hard', fact: '赤・白・赤の横帯の中央に、平和と繁栄の象徴であるレバノンスギが大きく描かれています。' },
+            { code: 'om', name: 'オマーン', capital: 'マスカット', continent: 'アジア', difficulty: 'hard', fact: '左上に伝統的な湾曲刀（ハンジャル）と交差する2本の剣が描かれています。' },
+            { code: 'kh', name: 'カンボジア', capital: 'プノンペン', continent: 'アジア', difficulty: 'hard', fact: '中央に世界遺産アンコール・ワットのシルエットが白く描かれています。' },
+            { code: 'la', name: 'ラオス', capital: 'ビエンチャン', continent: 'アジア', difficulty: 'hard', fact: '赤・紺・赤の横帯の中央に、満月を表す白い丸が配置されています。' },
+            { code: 'is', name: 'アイスランド', capital: 'レイキャビク', continent: 'ヨーロッパ', difficulty: 'hard', fact: '青地に赤と白のスカンジナビア十字。青は海、赤は火山、白は氷を表します。' },
+            { code: 'lu', name: 'ルクセンブルク', capital: 'ルクセンブルク', continent: 'ヨーロッパ', difficulty: 'hard', fact: 'オランダの国旗と似ていますが、青色が明るい水色（スカイブルー）になっています。' },
+            { code: 'ee', name: 'エストニア', capital: 'タリン', continent: 'ヨーロッパ', difficulty: 'hard', fact: '青・黒・白の横三色旗で、青は空と湖、黒は大地、白は雪と希望を表します。' },
+            { code: 'hr', name: 'クロアチア', capital: 'ザグレブ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '赤・白・青の横三色の中央に、チェック柄（シャボヴニツァ）の紋章が描かれています。' },
+            { code: 'uy', name: 'ウルグアイ', capital: 'モンテビデオ', continent: 'アメリカ', difficulty: 'hard', fact: '白と青の9本の条文と、カントン部に「五月の太陽」が描かれています。' },
+            { code: 'py', name: 'パラグアイ', capital: 'アスンシオン', continent: 'アメリカ', difficulty: 'hard', fact: '世界で唯一、国旗の表と裏で描かれている紋章のデザインが異なる国旗です。' },
+            { code: 'bo', name: 'ボリビア', capital: 'スクレ', continent: 'アメリカ', difficulty: 'hard', fact: '赤・黄・緑の横三色旗で、中央に国章が配されています。' },
+            { code: 'mg', name: 'マダガスカル', capital: 'アンタナナリボ', continent: 'アフリカ', difficulty: 'hard', fact: '左側に白い縦帯、右側に赤と緑の横二色帯が配置された国旗です。' },
+            { code: 'sn', name: 'セネガル', capital: 'ダカール', continent: 'アフリカ', difficulty: 'hard', fact: '緑・黄・赤の汎アフリカ色の縦三色旗で、中央に緑の星が描かれています。' },
+            { code: 'et', name: 'エチオピア', capital: 'アディスアベバ', continent: 'アフリカ', difficulty: 'hard', fact: '緑・黄・赤の汎アフリカ色発祥の国で、中央に青い丸と黄色の五芒星が配置されています。' },
+            { code: 'tn', name: 'チュニジア', capital: 'チュニス', continent: 'アフリカ', difficulty: 'hard', fact: '赤地の中央の白い円の中に、イスラムの象徴である新月と星が赤く描かれています。' },
+            { code: 'fj', name: 'フィジー', capital: 'スバ', continent: 'オセアニア', difficulty: 'hard', fact: '水色地にユニオンジャックと、サトウキビやバナナが描かれた国章が配されています。' },
+            { code: 'pw', name: 'パラオ', capital: 'マルキョク', continent: 'オセアニア', difficulty: 'hard', fact: '明るい青地に、満月を表す黄色い円が中央からやや左寄りに配置されています。' },
+            { code: 'ws', name: 'サモア', capital: 'アピア', continent: 'オセアニア', difficulty: 'hard', fact: '赤地の左上に青い長方形があり、その中に南十字星をかたどる5つの白い星が配置されています。' }
+        ];
+
+        // App State
+        let currentDifficulty = 'easy';
+        let currentRegion = 'all';
+        let currentMode = 'standard';
+        
+        let quizQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let correctCount = 0; // Correctly track count of correct answers
+        let streak = 0;
+        let maxStreak = 0;
+        let timer = null;
+        let timeLeft = 60;
+        let isAnswered = false;
+
+        // Sound Synthesis (Web Audio API)
+        function playSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'correct') {
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, ctx.currentTime);
+                    osc.frequency.setValueAtTime(164.81, ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.4);
+                }
+            } catch (e) {
+                // Audio fallback
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedHighScore = localStorage.getItem('flag_quiz_highscore') || 0;
+            document.getElementById('high-score').textContent = savedHighScore;
+        });
+
+        function showScreen(screenId) {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+
+            if (screenId === 'start-screen') {
+                clearInterval(timer);
+            }
+        }
+
+        function selectDifficulty(diff) {
+            currentDifficulty = diff;
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'bg-indigo-600/30');
+                btn.classList.add('border-slate-700', 'bg-slate-800');
+            });
+            const selected = document.getElementById(`btn-diff-${diff}`);
+            selected.classList.remove('border-slate-700', 'bg-slate-800');
+            selected.classList.add('border-indigo-500', 'bg-indigo-600/30');
+        }
+
+        function selectMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'bg-indigo-600/30');
+                btn.classList.add('border-slate-700', 'bg-slate-800');
+            });
+            const selected = document.getElementById(`btn-mode-${mode}`);
+            selected.classList.remove('border-slate-700', 'bg-slate-800');
+            selected.classList.add('border-indigo-500', 'bg-indigo-600/30');
+        }
+
+        function startGame() {
+            currentRegion = document.getElementById('region-select').value;
+            
+            let pool = countryData.filter(item => {
+                const diffMatch = (currentDifficulty === 'all') || (item.difficulty === currentDifficulty);
+                const regionMatch = (currentRegion === 'all') || (item.continent === currentRegion);
+                return diffMatch && regionMatch;
+            });
+
+            if (pool.length < 4) {
+                pool = countryData.filter(item => currentRegion === 'all' || item.continent === currentRegion);
+            }
+            if (pool.length < 4) {
+                pool = [...countryData];
+            }
+
+            pool = pool.sort(() => Math.random() - 0.5);
+            quizQuestions = pool.slice(0, currentMode === 'standard' ? 10 : 30);
+            
+            currentIndex = 0;
+            score = 0;
+            correctCount = 0;
+            streak = 0;
+            maxStreak = 0;
+            updateScoreUI();
+
+            showScreen('game-screen');
+
+            clearInterval(timer);
+            if (currentMode === 'timeattack') {
+                timeLeft = 60;
+                document.getElementById('timer-box').classList.remove('hidden');
+                updateTimerDisplay();
+                timer = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        finishGame();
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('timer-box').classList.add('hidden');
+            }
+
+            loadQuestion();
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer-display').textContent = `${timeLeft}秒`;
+            if (timeLeft <= 10) {
+                document.getElementById('timer-display').classList.add('text-rose-400', 'animate-pulse');
+            } else {
+                document.getElementById('timer-display').classList.remove('text-rose-400', 'animate-pulse');
+            }
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            document.getElementById('explanation-box').classList.add('hidden');
+            document.getElementById('hint-text').classList.add('hidden');
+            
+            const current = quizQuestions[currentIndex];
+            
+            if (currentMode === 'standard') {
+                document.getElementById('question-tracker').textContent = `第 ${currentIndex + 1} 問 / ${quizQuestions.length}`;
+                const progressPercent = ((currentIndex) / quizQuestions.length) * 100;
+                document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+            } else {
+                document.getElementById('question-tracker').textContent = `第 ${currentIndex + 1} 問`;
+                document.getElementById('progress-bar').style.width = `100%`;
+            }
+
+            const imgEl = document.getElementById('flag-img');
+            imgEl.src = `https://flagcdn.com/w320/${current.code}.png`;
+
+            // スマートな選択肢選出アルゴリズム（優先度スコアリング）
+            // 過去に既に正解として登場した国の名前リスト
+            const pastCorrectNames = quizQuestions.slice(0, currentIndex).map(q => q.name);
+
+            let candidates = countryData.filter(c => c.name !== current.name);
+            const targetRegion = (currentRegion !== 'all') ? currentRegion : current.continent;
+            const targetDifficulty = (currentDifficulty !== 'all') ? currentDifficulty : current.difficulty;
+
+            // 各候補国に対してスコアを計算（スコアが高いほどダミー選択肢に選ばれやすい）
+            function getPriorityScore(c) {
+                let score = 0;
+
+                // 1. 地域条件
+                if (c.continent === targetRegion) {
+                    score += 100;
+                } else if (currentRegion !== 'all') {
+                    // 地域指定モードで他地域の場合は大幅に減点（選択されないようにする）
+                    score -= 1000;
+                }
+
+                // 2. 過去に正解として出題された国でないか（ユーザー要望: 既出正解国の除外優先）
+                if (!pastCorrectNames.includes(c.name)) {
+                    score += 50;
+                }
+
+                // 3. 難易度の一致
+                if (c.difficulty === targetDifficulty) {
+                    score += 20;
+                }
+
+                return score;
+            }
+
+            // スコアが高い順（同点の場合はランダム）に並び替え
+            candidates.sort((a, b) => {
+                const scoreA = getPriorityScore(a) + (Math.random() * 5);
+                const scoreB = getPriorityScore(b) + (Math.random() * 5);
+                return scoreB - scoreA;
+            });
+
+            // 上位3件を誤答ダミーとして採用
+            const wrongChoices = candidates.slice(0, 3);
+            
+            const options = [...wrongChoices, current].sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'opt-btn py-3.5 px-4 bg-slate-700/80 hover:bg-indigo-600/40 border border-slate-600 rounded-xl font-bold text-sm text-center transition duration-150 active:scale-98 flex items-center justify-center';
+                btn.textContent = opt.name;
+                btn.onclick = () => checkAnswer(opt.name, current, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleHint() {
+            const hintEl = document.getElementById('hint-text');
+            const current = quizQuestions[currentIndex];
+            hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
+            hintEl.classList.toggle('hidden');
+        }
+
+        function checkAnswer(selectedName, correctObj, clickedBtn) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const isCorrect = (selectedName === correctObj.name);
+            const allOptionBtns = document.querySelectorAll('.opt-btn');
+
+            allOptionBtns.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent === correctObj.name) {
+                    btn.classList.remove('bg-slate-700/80', 'hover:bg-indigo-600/40', 'border-slate-600');
+                    btn.classList.add('bg-emerald-600', 'border-emerald-400', 'text-white');
+                }
+            });
+
+            if (isCorrect) {
+                playSound('correct');
+                score += 100 + (streak * 10);
+                correctCount++; // 正解数を加算
+                streak++;
+                if (streak > maxStreak) maxStreak = streak;
+            } else {
+                playSound('wrong');
+                clickedBtn.classList.remove('bg-slate-700/80');
+                clickedBtn.classList.add('bg-rose-600', 'border-rose-400', 'shake');
+                streak = 0;
+            }
+
+            updateScoreUI();
+            showExplanation(isCorrect, correctObj);
+        }
+
+        function updateScoreUI() {
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('streak-count').textContent = streak;
+        }
+
+        function showExplanation(isCorrect, countryObj) {
+            const box = document.getElementById('explanation-box');
+            const badge = document.getElementById('result-badge');
+            
+            if (isCorrect) {
+                badge.textContent = '正解！';
+                badge.className = 'px-2.5 py-1 rounded-md text-xs font-bold inline-block mb-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            } else {
+                badge.textContent = '不正解';
+                badge.className = 'px-2.5 py-1 rounded-md text-xs font-bold inline-block mb-1 bg-rose-500/20 text-rose-300 border border-rose-500/30';
+            }
+
+            document.getElementById('country-title').textContent = countryObj.name;
+            document.getElementById('country-capital').textContent = countryObj.capital;
+            document.getElementById('country-continent').textContent = countryObj.continent;
+            document.getElementById('country-fact').textContent = countryObj.fact;
+
+            box.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentMode === 'standard' && currentIndex >= quizQuestions.length) {
+                finishGame();
+            } else if (currentMode === 'timeattack' && currentIndex >= quizQuestions.length) {
+                finishGame();
+            } else {
+                loadQuestion();
+            }
+        }
+
+        function finishGame() {
+            clearInterval(timer);
+            showScreen('result-screen');
+
+            // 出題数（または解答完了数）に基づいて正しく正解率(%)を計算
+            const totalAnswered = currentIndex;
+            const accuracy = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
+            
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+            document.getElementById('final-streak').textContent = maxStreak;
+
+            const currentHigh = parseInt(localStorage.getItem('flag_quiz_highscore') || '0', 10);
+            if (score > currentHigh) {
+                localStorage.setItem('flag_quiz_highscore', score);
+                document.getElementById('high-score').textContent = score;
+            }
+        }
+    </script>
+</body>
+</html>
