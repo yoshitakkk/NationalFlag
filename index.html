@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>世界の国旗当てクイズ</title>
+    <title>世界の国クイズ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap');
         body {
@@ -35,7 +36,7 @@
         <div class="flex items-center gap-2 cursor-pointer" onclick="showScreen('start-screen')">
             <i class="fa-solid me-1 fa-earth-americas text-indigo-400 text-2xl"></i>
             <h1 class="text-xl font-extrabold tracking-wide bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-                国旗マスター
+                世界の国クイズ
             </h1>
         </div>
         <div class="flex items-center gap-4 text-sm font-bold">
@@ -59,8 +60,8 @@
                 <span class="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold mb-3 border border-indigo-500/30">
                     🌍 フラッグ・チャレンジ
                 </span>
-                <h2 class="text-3xl font-extrabold mb-2">世界の国旗当てクイズ</h2>
-                <p class="text-slate-400 text-sm">出題形式を選んで、世界の国旗や首都に挑戦しよう！</p>
+                <h2 class="text-3xl font-extrabold mb-2">世界の国クイズ</h2>
+                <p class="text-slate-400 text-sm">国旗・地図・首都の４択クイズに挑戦しよう！</p>
             </div>
 
             <!-- Settings -->
@@ -91,10 +92,11 @@
                 <!-- Question Type -->
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">出題形式</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <button onclick="selectQuestionType('flagToCountry')" id="btn-question-flagToCountry" class="question-type-btn py-3 px-4 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm text-center transition">国旗 → 国名</button>
                         <button onclick="selectQuestionType('flagToCapital')" id="btn-question-flagToCapital" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">国旗 → 首都</button>
                         <button onclick="selectQuestionType('capitalToFlag')" id="btn-question-capitalToFlag" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">首都 → 国旗</button>
+                        <button onclick="selectQuestionType('mapToCountry')" id="btn-question-mapToCountry" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">地図 → 国名</button>
                     </div>
                 </div>
 
@@ -115,6 +117,7 @@
             <button onclick="startGame()" class="w-full mt-8 py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white rounded-2xl font-extrabold text-lg shadow-lg shadow-indigo-500/25 transition active:scale-95 flex items-center justify-center gap-2">
                 <i class="fa-solid fa-play"></i> クイズスタート
             </button>
+            <p id="map-error" role="alert" class="hidden mt-3 text-center text-sm font-bold text-rose-300"></p>
         </div>
 
         <!-- 2. QUIZ GAME SCREEN -->
@@ -150,6 +153,10 @@
                 <div id="question-prompt" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 px-5 py-8 text-center">
                     <span class="block text-xs text-slate-400 font-bold mb-2">首都</span>
                     <span id="question-prompt-text" class="text-2xl font-extrabold text-white"></span>
+                </div>
+                <div id="question-map-container" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 p-2 sm:p-4">
+                    <p class="text-center text-sm font-bold text-slate-300 mb-2">青く示された国の名前は？</p>
+                    <svg id="world-map" viewBox="0 0 960 500" role="img" aria-label="国の位置を示す世界地図" class="w-full h-auto"></svg>
                 </div>
 
                 <!-- Hint Button & Display -->
@@ -226,7 +233,7 @@
 
     <!-- Footer -->
     <footer class="w-full max-w-4xl mx-auto px-4 py-4 text-center text-xs text-slate-500">
-        世界の国旗当てクイズ &copy; 2026 - Powered by FlagCDN
+        世界の国クイズ &copy; 2026 - Powered by FlagCDN / Map data: Natural Earth
     </footer>
 
     <!-- JavaScript Game Logic -->
@@ -316,6 +323,9 @@
         
         let quizQuestions = [];
         let currentIndex = 0;
+        let worldMapFeatures = null;
+        let worldMapFeatureCodes = new Set();
+        let worldMapPromise = null;
         let score = 0;
         let correctCount = 0; // Correctly track count of correct answers
         let streak = 0;
@@ -409,8 +419,59 @@
             return country.name;
         }
 
-        function startGame() {
+        async function ensureWorldMapLoaded() {
+            if (worldMapFeatures) return;
+            if (!window.d3) {
+                throw new Error('地図の描画ライブラリを読み込めませんでした。');
+            }
+            if (!worldMapPromise) {
+                worldMapPromise = fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`地図データの取得に失敗しました (${response.status})。`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!Array.isArray(data.features) || data.features.length === 0) {
+                            throw new Error('地図データの形式が正しくありません。');
+                        }
+                        worldMapFeatures = data.features.filter(feature => feature.geometry);
+                        worldMapFeatureCodes = new Set(worldMapFeatures.flatMap(feature => {
+                            const code = getWorldMapCountryCode(feature);
+                            return code && code !== '-99' ? [code.toLowerCase()] : [];
+                        }));
+                    });
+            }
+
+            try {
+                await worldMapPromise;
+            } catch (error) {
+                worldMapPromise = null;
+                throw error;
+            }
+        }
+
+        function getWorldMapCountryCode(feature) {
+            const enhancedCode = feature.properties.ISO_A2_EH;
+            return enhancedCode && enhancedCode !== '-99' ? enhancedCode : feature.properties.ISO_A2;
+        }
+
+        async function startGame() {
             currentRegion = document.getElementById('region-select').value;
+            const mapError = document.getElementById('map-error');
+            mapError.classList.add('hidden');
+
+            if (currentQuestionType === 'mapToCountry') {
+                try {
+                    await ensureWorldMapLoaded();
+                } catch (error) {
+                    console.error('地図データを読み込めませんでした。', error);
+                    mapError.textContent = '地図データを読み込めませんでした。インターネット接続を確認して、もう一度お試しください。';
+                    mapError.classList.remove('hidden');
+                    return;
+                }
+            }
             
             let pool = countryData.filter(item => {
                 const diffMatch = (currentDifficulty === 'all') || (item.difficulty === currentDifficulty);
@@ -423,6 +484,15 @@
             }
             if (pool.length < 4) {
                 pool = [...countryData];
+            }
+
+            if (currentQuestionType === 'mapToCountry') {
+                const unsupportedCountries = pool.filter(item => !worldMapFeatureCodes.has(item.code));
+                if (unsupportedCountries.length > 0) {
+                    mapError.textContent = `地図データに ${unsupportedCountries.map(item => item.name).join('、')} が含まれていないため、この設定では開始できません。`;
+                    mapError.classList.remove('hidden');
+                    return;
+                }
             }
 
             pool = pool.sort(() => Math.random() - 0.5);
@@ -484,14 +554,19 @@
 
             const flagContainer = document.getElementById('question-flag-container');
             const questionPrompt = document.getElementById('question-prompt');
+            const mapContainer = document.getElementById('question-map-container');
             const imgEl = document.getElementById('flag-img');
+            flagContainer.classList.add('hidden');
+            questionPrompt.classList.add('hidden');
+            mapContainer.classList.add('hidden');
             if (currentQuestionType === 'capitalToFlag') {
-                flagContainer.classList.add('hidden');
                 questionPrompt.classList.remove('hidden');
                 document.getElementById('question-prompt-text').textContent = current.capital;
+            } else if (currentQuestionType === 'mapToCountry') {
+                mapContainer.classList.remove('hidden');
+                renderWorldMap(current);
             } else {
                 flagContainer.classList.remove('hidden');
-                questionPrompt.classList.add('hidden');
                 imgEl.src = `https://flagcdn.com/w320/${current.code}.png`;
             }
 
@@ -561,6 +636,39 @@
             });
         }
 
+        function renderWorldMap(country) {
+            const svg = document.getElementById('world-map');
+            const projection = d3.geoNaturalEarth1().fitExtent(
+                [[12, 12], [948, 488]],
+                { type: 'FeatureCollection', features: worldMapFeatures }
+            );
+            const path = d3.geoPath(projection);
+            const targetCode = country.code.toLowerCase();
+            let targetFound = false;
+            svg.replaceChildren();
+
+            worldMapFeatures.forEach(feature => {
+                const featureCode = (getWorldMapCountryCode(feature) || '').toLowerCase();
+                const isTarget = featureCode === targetCode;
+                targetFound = targetFound || isTarget;
+
+                const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                shape.setAttribute('d', path(feature));
+                shape.setAttribute('fill', isTarget ? '#22d3ee' : '#334155');
+                shape.setAttribute('stroke', isTarget ? '#fbbf24' : '#0f172a');
+                shape.setAttribute('stroke-width', isTarget ? '1.8' : '0.7');
+                shape.setAttribute('stroke-linejoin', 'round');
+                if (isTarget) {
+                    shape.setAttribute('filter', 'drop-shadow(0 0 3px #fbbf24)');
+                }
+                svg.appendChild(shape);
+            });
+
+            if (!targetFound) {
+                throw new Error(`地図データに ${country.name} が見つかりません。`);
+            }
+        }
+
         function toggleHint() {
             const hintEl = document.getElementById('hint-text');
             const current = quizQuestions[currentIndex];
@@ -568,6 +676,8 @@
                 hintEl.textContent = `💡 ヒント: 国名は「${current.name}」 / 地域: ${current.continent}`;
             } else if (currentQuestionType === 'capitalToFlag') {
                 hintEl.textContent = `💡 ヒント: 地域は「${current.continent}」`;
+            } else if (currentQuestionType === 'mapToCountry') {
+                hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
             } else {
                 hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
             }
