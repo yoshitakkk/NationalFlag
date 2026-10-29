@@ -60,7 +60,7 @@
                     🌍 フラッグ・チャレンジ
                 </span>
                 <h2 class="text-3xl font-extrabold mb-2">世界の国旗当てクイズ</h2>
-                <p class="text-slate-400 text-sm">国旗を見て正しい国名を当てよう！全問正解を目指そう。</p>
+                <p class="text-slate-400 text-sm">出題形式を選んで、世界の国旗や首都に挑戦しよう！</p>
             </div>
 
             <!-- Settings -->
@@ -88,9 +88,19 @@
                     </select>
                 </div>
 
+                <!-- Question Type -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">出題形式</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button onclick="selectQuestionType('flagToCountry')" id="btn-question-flagToCountry" class="question-type-btn py-3 px-4 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm text-center transition">国旗 → 国名</button>
+                        <button onclick="selectQuestionType('flagToCapital')" id="btn-question-flagToCapital" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">国旗 → 首都</button>
+                        <button onclick="selectQuestionType('capitalToFlag')" id="btn-question-capitalToFlag" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">首都 → 国旗</button>
+                    </div>
+                </div>
+
                 <!-- Game Mode -->
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">モード</label>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">プレイモード</label>
                     <div class="grid grid-cols-2 gap-3">
                         <button onclick="selectMode('standard')" id="btn-mode-standard" class="mode-btn py-3 px-4 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm flex items-center justify-center gap-2 transition">
                             <i class="fa-solid fa-list-check text-indigo-400"></i> 10問チャレンジ
@@ -132,10 +142,14 @@
             <!-- Main Question Card -->
             <div id="quiz-card" class="bg-slate-800/90 border border-slate-700 rounded-3xl p-6 shadow-2xl flex flex-col items-center">
                 <!-- Flag Image Container -->
-                <div class="relative group my-4">
+                <div id="question-flag-container" class="relative group my-4">
                     <div class="w-64 h-40 sm:w-80 sm:h-48 bg-slate-900 border-4 border-slate-700 rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center">
-                        <img id="flag-img" src="" alt="国旗" class="w-full h-full object-cover transition duration-300">
+                        <img id="flag-img" src="" alt="出題されている国旗" class="w-full h-full object-cover transition duration-300">
                     </div>
+                </div>
+                <div id="question-prompt" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 px-5 py-8 text-center">
+                    <span class="block text-xs text-slate-400 font-bold mb-2">首都</span>
+                    <span id="question-prompt-text" class="text-2xl font-extrabold text-white"></span>
                 </div>
 
                 <!-- Hint Button & Display -->
@@ -298,6 +312,7 @@
         let currentDifficulty = 'easy';
         let currentRegion = 'all';
         let currentMode = 'standard';
+        let currentQuestionType = 'flagToCountry';
         
         let quizQuestions = [];
         let currentIndex = 0;
@@ -377,6 +392,23 @@
             selected.classList.add('border-indigo-500', 'bg-indigo-600/30');
         }
 
+        function selectQuestionType(type) {
+            currentQuestionType = type;
+            document.querySelectorAll('.question-type-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'bg-indigo-600/30');
+                btn.classList.add('border-slate-700', 'bg-slate-800');
+            });
+            const selected = document.getElementById(`btn-question-${type}`);
+            selected.classList.remove('border-slate-700', 'bg-slate-800');
+            selected.classList.add('border-indigo-500', 'bg-indigo-600/30');
+        }
+
+        function getAnswerValue(country) {
+            if (currentQuestionType === 'flagToCapital') return country.capital;
+            if (currentQuestionType === 'capitalToFlag') return country.code;
+            return country.name;
+        }
+
         function startGame() {
             currentRegion = document.getElementById('region-select').value;
             
@@ -450,14 +482,25 @@
                 document.getElementById('progress-bar').style.width = `100%`;
             }
 
+            const flagContainer = document.getElementById('question-flag-container');
+            const questionPrompt = document.getElementById('question-prompt');
             const imgEl = document.getElementById('flag-img');
-            imgEl.src = `https://flagcdn.com/w320/${current.code}.png`;
+            if (currentQuestionType === 'capitalToFlag') {
+                flagContainer.classList.add('hidden');
+                questionPrompt.classList.remove('hidden');
+                document.getElementById('question-prompt-text').textContent = current.capital;
+            } else {
+                flagContainer.classList.remove('hidden');
+                questionPrompt.classList.add('hidden');
+                imgEl.src = `https://flagcdn.com/w320/${current.code}.png`;
+            }
 
             // スマートな選択肢選出アルゴリズム（優先度スコアリング）
             // 過去に既に正解として登場した国の名前リスト
             const pastCorrectNames = quizQuestions.slice(0, currentIndex).map(q => q.name);
 
-            let candidates = countryData.filter(c => c.name !== current.name);
+            const correctAnswer = getAnswerValue(current);
+            let candidates = countryData.filter(c => c.name !== current.name && getAnswerValue(c) !== correctAnswer);
             const targetRegion = (currentRegion !== 'all') ? currentRegion : current.continent;
             const targetDifficulty = (currentDifficulty !== 'all') ? currentDifficulty : current.difficulty;
 
@@ -504,8 +547,16 @@
             options.forEach(opt => {
                 const btn = document.createElement('button');
                 btn.className = 'opt-btn py-3.5 px-4 bg-slate-700/80 hover:bg-indigo-600/40 border border-slate-600 rounded-xl font-bold text-sm text-center transition duration-150 active:scale-98 flex items-center justify-center';
-                btn.textContent = opt.name;
-                btn.onclick = () => checkAnswer(opt.name, current, btn);
+                btn.dataset.answer = getAnswerValue(opt);
+                btn.dataset.countryCode = opt.code;
+                if (currentQuestionType === 'capitalToFlag') {
+                    btn.classList.add('p-3');
+                    btn.setAttribute('aria-label', '国旗の選択肢');
+                    btn.innerHTML = `<img src="https://flagcdn.com/w320/${opt.code}.png" alt="" class="w-full h-20 sm:h-24 object-cover rounded-lg">`;
+                } else {
+                    btn.textContent = getAnswerValue(opt);
+                }
+                btn.onclick = () => checkAnswer(getAnswerValue(opt), current, btn);
                 container.appendChild(btn);
             });
         }
@@ -513,7 +564,13 @@
         function toggleHint() {
             const hintEl = document.getElementById('hint-text');
             const current = quizQuestions[currentIndex];
-            hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
+            if (currentQuestionType === 'flagToCapital') {
+                hintEl.textContent = `💡 ヒント: 国名は「${current.name}」 / 地域: ${current.continent}`;
+            } else if (currentQuestionType === 'capitalToFlag') {
+                hintEl.textContent = `💡 ヒント: 地域は「${current.continent}」`;
+            } else {
+                hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
+            }
             hintEl.classList.toggle('hidden');
         }
 
@@ -521,12 +578,12 @@
             if (isAnswered) return;
             isAnswered = true;
 
-            const isCorrect = (selectedName === correctObj.name);
+            const isCorrect = (selectedName === getAnswerValue(correctObj));
             const allOptionBtns = document.querySelectorAll('.opt-btn');
 
             allOptionBtns.forEach(btn => {
                 btn.disabled = true;
-                if (btn.textContent === correctObj.name) {
+                if (btn.dataset.countryCode === correctObj.code) {
                     btn.classList.remove('bg-slate-700/80', 'hover:bg-indigo-600/40', 'border-slate-600');
                     btn.classList.add('bg-emerald-600', 'border-emerald-400', 'text-white');
                 }
