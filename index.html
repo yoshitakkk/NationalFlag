@@ -156,7 +156,16 @@
                 </div>
                 <div id="question-map-container" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 p-2 sm:p-4">
                     <p class="text-center text-sm font-bold text-slate-300 mb-2">青く示された国の名前は？</p>
+                    <div class="flex justify-center gap-2 mb-2">
+                        <button onclick="zoomToCurrentCountry()" class="px-3 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-xs font-bold transition">
+                            <i class="fa-solid fa-magnifying-glass-plus mr-1"></i>該当国を拡大
+                        </button>
+                        <button onclick="resetWorldMapZoom()" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-bold transition">
+                            <i class="fa-solid fa-earth-americas mr-1"></i>世界地図に戻す
+                        </button>
+                    </div>
                     <svg id="world-map" viewBox="0 0 960 500" role="img" aria-label="国の位置を示す世界地図" class="w-full h-auto"></svg>
+                    <p class="text-center text-xs text-slate-500 mt-1">地図上でホイール／ピンチ操作でも拡大・縮小できます</p>
                 </div>
 
                 <!-- Hint Button & Display -->
@@ -326,6 +335,9 @@
         let worldMapFeatures = null;
         let worldMapFeatureCodes = new Set();
         let worldMapPromise = null;
+        let worldMapZoom = null;
+        let currentMapTargetFeature = null;
+        let currentMapTargetBounds = null;
         let score = 0;
         let correctCount = 0; // Correctly track count of correct answers
         let streak = 0;
@@ -638,8 +650,10 @@
 
         function renderWorldMap(country) {
             const svg = document.getElementById('world-map');
+            const width = 960;
+            const height = 500;
             const projection = d3.geoNaturalEarth1().fitExtent(
-                [[12, 12], [948, 488]],
+                [[12, 12], [width - 12, height - 12]],
                 { type: 'FeatureCollection', features: worldMapFeatures }
             );
             const path = d3.geoPath(projection);
@@ -647,10 +661,17 @@
             let targetFound = false;
             svg.replaceChildren();
 
+            const mapGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            svg.appendChild(mapGroup);
+
             worldMapFeatures.forEach(feature => {
                 const featureCode = (getWorldMapCountryCode(feature) || '').toLowerCase();
                 const isTarget = featureCode === targetCode;
                 targetFound = targetFound || isTarget;
+                if (isTarget) {
+                    currentMapTargetFeature = feature;
+                    currentMapTargetBounds = path.bounds(feature);
+                }
 
                 const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 shape.setAttribute('d', path(feature));
@@ -661,12 +682,44 @@
                 if (isTarget) {
                     shape.setAttribute('filter', 'drop-shadow(0 0 3px #fbbf24)');
                 }
-                svg.appendChild(shape);
+                mapGroup.appendChild(shape);
             });
 
             if (!targetFound) {
                 throw new Error(`地図データに ${country.name} が見つかりません。`);
             }
+
+            const svgSelection = d3.select(svg);
+            worldMapZoom = d3.zoom()
+                .scaleExtent([1, 10])
+                .extent([[0, 0], [width, height]])
+                .on('zoom', event => {
+                    mapGroup.setAttribute('transform', event.transform);
+                });
+            svgSelection.call(worldMapZoom);
+            resetWorldMapZoom();
+        }
+
+        function zoomToCurrentCountry() {
+            if (!currentMapTargetFeature || !worldMapZoom) return;
+
+            const svg = document.getElementById('world-map');
+            const bounds = currentMapTargetBounds;
+            const boundsWidth = Math.max(bounds[1][0] - bounds[0][0], 10);
+            const boundsHeight = Math.max(bounds[1][1] - bounds[0][1], 10);
+            const scale = Math.min(10, Math.max(1.5, 0.85 * Math.min(936 / boundsWidth, 476 / boundsHeight)));
+            const centerX = (bounds[0][0] + bounds[1][0]) / 2;
+            const centerY = (bounds[0][1] + bounds[1][1]) / 2;
+            const transform = d3.zoomIdentity
+                .translate(480 - scale * centerX, 250 - scale * centerY)
+                .scale(scale);
+
+            d3.select(svg).transition().duration(650).call(worldMapZoom.transform, transform);
+        }
+
+        function resetWorldMapZoom() {
+            if (!worldMapZoom) return;
+            d3.select('#world-map').transition().duration(500).call(worldMapZoom.transform, d3.zoomIdentity);
         }
 
         function toggleHint() {
