@@ -61,7 +61,7 @@
                     🌍 フラッグ・チャレンジ
                 </span>
                 <h2 class="text-3xl font-extrabold mb-2">世界の国クイズ</h2>
-                <p class="text-slate-400 text-sm">全195か国を収録。初級・中級・上級から挑戦しよう！</p>
+                <p class="text-slate-400 text-sm">全195か国を収録。初級・中級・上級・超上級から挑戦しよう！</p>
             </div>
 
             <!-- Settings -->
@@ -69,12 +69,13 @@
                 <!-- Difficulty -->
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">難易度</label>
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <button onclick="selectDifficulty('easy')" id="btn-diff-easy" class="diff-btn py-2.5 px-4 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm text-center transition">初級・65か国</button>
-                        <button onclick="selectDifficulty('medium')" id="btn-diff-medium" class="diff-btn py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">中級・65か国</button>
-                        <button onclick="selectDifficulty('hard')" id="btn-diff-hard" class="diff-btn py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">上級・65か国</button>
+                        <button onclick="selectDifficulty('medium')" id="btn-diff-medium" class="diff-btn py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">中級・64か国</button>
+                        <button onclick="selectDifficulty('hard')" id="btn-diff-hard" class="diff-btn py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">上級・39か国</button>
+                        <button onclick="selectDifficulty('veryhard')" id="btn-diff-veryhard" class="diff-btn py-2.5 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">超上級・27か国</button>
                     </div>
-                    <p class="mt-2 text-xs text-slate-500">初級はなじみ深い国、中級は地域や首都の知識、上級は小国や似た国旗の見分けが目安です。</p>
+                    <p class="mt-2 text-xs text-slate-500">初級はなじみ深い国、中級は地域や首都の知識、上級は国旗の特徴、超上級は小国や難しい首都が目安です。</p>
                 </div>
 
                 <!-- Region -->
@@ -429,34 +430,34 @@
             { code: 'mh', name: 'マーシャル諸島', capital: 'マジュロ', continent: 'オセアニア', difficulty: 'medium', fact: '首都はマジュロ。国旗と国名をセットで覚えましょう。' },
             { code: 'fm', name: 'ミクロネシア連邦', capital: 'パリキール', continent: 'オセアニア', difficulty: 'medium', fact: '首都はパリキール。国旗と国名をセットで覚えましょう。' },
 
-            // Hard: less familiar flags, countries and capitals
-            { code: 'gq', name: '赤道ギニア', capital: 'マラボ', continent: 'アフリカ', difficulty: 'hard', fact: '首都はマラボ。国旗と国名をセットで覚えましょう。' },
-            { code: 'er', name: 'エリトリア', capital: 'アスマラ', continent: 'アフリカ', difficulty: 'hard', fact: '首都はアスマラ。国旗と国名をセットで覚えましょう。' },
-            { code: 'sz', name: 'エスワティニ', capital: 'ムババーネ', continent: 'アフリカ', difficulty: 'hard', fact: '行政上の首都はムババーネです。国旗と国名をセットで覚えましょう。' },
-            { code: 'gw', name: 'ギニアビサウ', capital: 'ビサウ', continent: 'アフリカ', difficulty: 'hard', fact: '首都はビサウ。国旗と国名をセットで覚えましょう。' },
-            { code: 'ls', name: 'レソト', capital: 'マセル', continent: 'アフリカ', difficulty: 'hard', fact: '首都はマセル。国旗と国名をセットで覚えましょう。' },
-            { code: 'mw', name: 'マラウイ', capital: 'リロングウェ', continent: 'アフリカ', difficulty: 'hard', fact: '首都はリロングウェ。国旗と国名をセットで覚えましょう。' },
-            { code: 'ml', name: 'マリ', capital: 'バマコ', continent: 'アフリカ', difficulty: 'hard', fact: '首都はバマコ。国旗と国名をセットで覚えましょう。' },
-            { code: 'mr', name: 'モーリタニア', capital: 'ヌアクショット', continent: 'アフリカ', difficulty: 'hard', fact: '首都はヌアクショット。国旗と国名をセットで覚えましょう。' },
-            { code: 'mu', name: 'モーリシャス', capital: 'ポートルイス', continent: 'アフリカ', difficulty: 'hard', fact: '首都はポートルイス。国旗と国名をセットで覚えましょう。' },
-            { code: 'st', name: 'サントメ・プリンシペ', capital: 'サントメ', continent: 'アフリカ', difficulty: 'hard', fact: '首都はサントメ。国旗と国名をセットで覚えましょう。' },
-            { code: 'sc', name: 'セーシェル', capital: 'ビクトリア', continent: 'アフリカ', difficulty: 'hard', fact: '首都はビクトリア。国旗と国名をセットで覚えましょう。' },
-            { code: 'af', name: 'アフガニスタン', capital: 'カブール', continent: 'アジア', difficulty: 'hard', fact: '首都はカブール。国旗と国名をセットで覚えましょう。' },
-            { code: 'bn', name: 'ブルネイ', capital: 'バンダルスリブガワン', continent: 'アジア', difficulty: 'hard', fact: '首都はバンダルスリブガワン。国旗と国名をセットで覚えましょう。' },
-            { code: 'tl', name: '東ティモール', capital: 'ディリ', continent: 'アジア', difficulty: 'hard', fact: '首都はディリ。国旗と国名をセットで覚えましょう。' },
-            { code: 'tm', name: 'トルクメニスタン', capital: 'アシガバート', continent: 'アジア', difficulty: 'hard', fact: '首都はアシガバート。国旗と国名をセットで覚えましょう。' },
-            { code: 'ad', name: 'アンドラ', capital: 'アンドラ・ラ・ベリャ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '首都はアンドラ・ラ・ベリャ。国旗と国名をセットで覚えましょう。' },
-            { code: 'li', name: 'リヒテンシュタイン', capital: 'ファドゥーツ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '首都はファドゥーツ。国旗と国名をセットで覚えましょう。' },
-            { code: 'mc', name: 'モナコ', capital: 'モナコ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '首都はモナコ。国旗と国名をセットで覚えましょう。' },
-            { code: 'sm', name: 'サンマリノ', capital: 'サンマリノ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '首都はサンマリノ。国旗と国名をセットで覚えましょう。' },
-            { code: 'mt', name: 'マルタ', capital: 'バレッタ', continent: 'ヨーロッパ', difficulty: 'hard', fact: '首都はバレッタ。国旗と国名をセットで覚えましょう。' },
-            { code: 'dm', name: 'ドミニカ国', capital: 'ロゾー', continent: 'アメリカ', difficulty: 'hard', fact: '首都はロゾー。国旗と国名をセットで覚えましょう。' },
-            { code: 'gd', name: 'グレナダ', capital: 'セントジョージズ', continent: 'アメリカ', difficulty: 'hard', fact: '首都はセントジョージズ。国旗と国名をセットで覚えましょう。' },
-            { code: 'kn', name: 'セントクリストファー・ネービス', capital: 'バセテール', continent: 'アメリカ', difficulty: 'hard', fact: '首都はバセテール。国旗と国名をセットで覚えましょう。' },
-            { code: 'lc', name: 'セントルシア', capital: 'カストリーズ', continent: 'アメリカ', difficulty: 'hard', fact: '首都はカストリーズ。国旗と国名をセットで覚えましょう。' },
-            { code: 'vc', name: 'セントビンセントおよびグレナディーン諸島', capital: 'キングスタウン', continent: 'アメリカ', difficulty: 'hard', fact: '首都はキングスタウン。国旗と国名をセットで覚えましょう。' },
-            { code: 'nr', name: 'ナウル', capital: 'ヤレン', continent: 'オセアニア', difficulty: 'hard', fact: '事実上の首都機能を持つ地区はヤレンです。国旗と国名をセットで覚えましょう。' },
-            { code: 'va', name: 'バチカン市国', capital: 'バチカン', continent: 'ヨーロッパ', difficulty: 'medium', fact: '首都はバチカン。国旗と国名をセットで覚えましょう。' }
+            // Very hard: small countries and less familiar capitals
+            { code: 'gq', name: '赤道ギニア', capital: 'マラボ', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はマラボ。国旗と国名をセットで覚えましょう。' },
+            { code: 'er', name: 'エリトリア', capital: 'アスマラ', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はアスマラ。国旗と国名をセットで覚えましょう。' },
+            { code: 'sz', name: 'エスワティニ', capital: 'ムババーネ', continent: 'アフリカ', difficulty: 'veryhard', fact: '行政上の首都はムババーネです。国旗と国名をセットで覚えましょう。' },
+            { code: 'gw', name: 'ギニアビサウ', capital: 'ビサウ', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はビサウ。国旗と国名をセットで覚えましょう。' },
+            { code: 'ls', name: 'レソト', capital: 'マセル', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はマセル。国旗と国名をセットで覚えましょう。' },
+            { code: 'mw', name: 'マラウイ', capital: 'リロングウェ', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はリロングウェ。国旗と国名をセットで覚えましょう。' },
+            { code: 'ml', name: 'マリ', capital: 'バマコ', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はバマコ。国旗と国名をセットで覚えましょう。' },
+            { code: 'mr', name: 'モーリタニア', capital: 'ヌアクショット', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はヌアクショット。国旗と国名をセットで覚えましょう。' },
+            { code: 'mu', name: 'モーリシャス', capital: 'ポートルイス', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はポートルイス。国旗と国名をセットで覚えましょう。' },
+            { code: 'st', name: 'サントメ・プリンシペ', capital: 'サントメ', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はサントメ。国旗と国名をセットで覚えましょう。' },
+            { code: 'sc', name: 'セーシェル', capital: 'ビクトリア', continent: 'アフリカ', difficulty: 'veryhard', fact: '首都はビクトリア。国旗と国名をセットで覚えましょう。' },
+            { code: 'af', name: 'アフガニスタン', capital: 'カブール', continent: 'アジア', difficulty: 'veryhard', fact: '首都はカブール。国旗と国名をセットで覚えましょう。' },
+            { code: 'bn', name: 'ブルネイ', capital: 'バンダルスリブガワン', continent: 'アジア', difficulty: 'veryhard', fact: '首都はバンダルスリブガワン。国旗と国名をセットで覚えましょう。' },
+            { code: 'tl', name: '東ティモール', capital: 'ディリ', continent: 'アジア', difficulty: 'veryhard', fact: '首都はディリ。国旗と国名をセットで覚えましょう。' },
+            { code: 'tm', name: 'トルクメニスタン', capital: 'アシガバート', continent: 'アジア', difficulty: 'veryhard', fact: '首都はアシガバート。国旗と国名をセットで覚えましょう。' },
+            { code: 'ad', name: 'アンドラ', capital: 'アンドラ・ラ・ベリャ', continent: 'ヨーロッパ', difficulty: 'veryhard', fact: '首都はアンドラ・ラ・ベリャ。国旗と国名をセットで覚えましょう。' },
+            { code: 'li', name: 'リヒテンシュタイン', capital: 'ファドゥーツ', continent: 'ヨーロッパ', difficulty: 'veryhard', fact: '首都はファドゥーツ。国旗と国名をセットで覚えましょう。' },
+            { code: 'mc', name: 'モナコ', capital: 'モナコ', continent: 'ヨーロッパ', difficulty: 'veryhard', fact: '首都はモナコ。国旗と国名をセットで覚えましょう。' },
+            { code: 'sm', name: 'サンマリノ', capital: 'サンマリノ', continent: 'ヨーロッパ', difficulty: 'veryhard', fact: '首都はサンマリノ。国旗と国名をセットで覚えましょう。' },
+            { code: 'mt', name: 'マルタ', capital: 'バレッタ', continent: 'ヨーロッパ', difficulty: 'veryhard', fact: '首都はバレッタ。国旗と国名をセットで覚えましょう。' },
+            { code: 'dm', name: 'ドミニカ国', capital: 'ロゾー', continent: 'アメリカ', difficulty: 'veryhard', fact: '首都はロゾー。国旗と国名をセットで覚えましょう。' },
+            { code: 'gd', name: 'グレナダ', capital: 'セントジョージズ', continent: 'アメリカ', difficulty: 'veryhard', fact: '首都はセントジョージズ。国旗と国名をセットで覚えましょう。' },
+            { code: 'kn', name: 'セントクリストファー・ネービス', capital: 'バセテール', continent: 'アメリカ', difficulty: 'veryhard', fact: '首都はバセテール。国旗と国名をセットで覚えましょう。' },
+            { code: 'lc', name: 'セントルシア', capital: 'カストリーズ', continent: 'アメリカ', difficulty: 'veryhard', fact: '首都はカストリーズ。国旗と国名をセットで覚えましょう。' },
+            { code: 'vc', name: 'セントビンセントおよびグレナディーン諸島', capital: 'キングスタウン', continent: 'アメリカ', difficulty: 'veryhard', fact: '首都はキングスタウン。国旗と国名をセットで覚えましょう。' },
+            { code: 'nr', name: 'ナウル', capital: 'ヤレン', continent: 'オセアニア', difficulty: 'veryhard', fact: '事実上の首都機能を持つ地区はヤレンです。国旗と国名をセットで覚えましょう。' },
+            { code: 'va', name: 'バチカン市国', capital: 'バチカン', continent: 'ヨーロッパ', difficulty: 'veryhard', fact: '首都はバチカン。国旗と国名をセットで覚えましょう。' }
         ];
 
         // App State
