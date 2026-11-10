@@ -94,11 +94,26 @@
                 <!-- Question Type -->
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">出題形式</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <button onclick="selectQuestionType('flagToCountry')" id="btn-question-flagToCountry" class="question-type-btn py-3 px-4 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm text-center transition">国旗 → 国名</button>
-                        <button onclick="selectQuestionType('flagToCapital')" id="btn-question-flagToCapital" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">国旗 → 首都</button>
-                        <button onclick="selectQuestionType('capitalToFlag')" id="btn-question-capitalToFlag" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">首都 → 国旗</button>
-                        <button onclick="selectQuestionType('mapToCountry')" id="btn-question-mapToCountry" class="question-type-btn py-3 px-4 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition">地図 → 国名</button>
+                    <p class="mb-2 text-xs text-slate-500">「→」の左が問題、右が答えです。やりたい問題を選んでください。</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <button onclick="selectQuestionType('flagToCountry')" id="btn-question-flagToCountry" aria-pressed="true" class="question-type-btn py-3 px-3 rounded-xl border border-indigo-500 bg-indigo-600/30 font-bold text-sm text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <span class="block">国旗 → 国名</span><span class="mt-1 block text-xs font-normal text-slate-300">国旗を見て国を答える</span>
+                        </button>
+                        <button onclick="selectQuestionType('flagToCapital')" id="btn-question-flagToCapital" aria-pressed="false" class="question-type-btn py-3 px-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <span class="block">国旗 → 首都</span><span class="mt-1 block text-xs font-normal text-slate-300">国旗を見て首都を答える</span>
+                        </button>
+                        <button onclick="selectQuestionType('capitalToFlag')" id="btn-question-capitalToFlag" aria-pressed="false" class="question-type-btn py-3 px-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <span class="block">首都 → 国旗</span><span class="mt-1 block text-xs font-normal text-slate-300">首都を見て国旗を選ぶ</span>
+                        </button>
+                        <button onclick="selectQuestionType('mapToCountry')" id="btn-question-mapToCountry" aria-pressed="false" class="question-type-btn py-3 px-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <span class="block">地図 → 国名</span><span class="mt-1 block text-xs font-normal text-slate-300">地図を見て国を答える</span>
+                        </button>
+                        <button onclick="selectQuestionType('currencyToCountry')" id="btn-question-currencyToCountry" aria-pressed="false" class="question-type-btn py-3 px-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <span class="block">通貨 → 国名</span><span class="mt-1 block text-xs font-normal text-slate-300">通貨を見て国を答える</span>
+                        </button>
+                        <button onclick="selectQuestionType('countryToCurrency')" id="btn-question-countryToCurrency" aria-pressed="false" class="question-type-btn py-3 px-3 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 font-bold text-sm text-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <span class="block">国名 → 通貨</span><span class="mt-1 block text-xs font-normal text-slate-300">国名を見て通貨を答える</span>
+                        </button>
                     </div>
                     <p class="mt-2 text-xs text-slate-500">地図クイズは地図データで国境を判別できる国が出題対象です。</p>
                 </div>
@@ -154,7 +169,7 @@
                     </div>
                 </div>
                 <div id="question-prompt" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 px-5 py-8 text-center">
-                    <span class="block text-xs text-slate-400 font-bold mb-2">首都</span>
+                    <span id="question-prompt-label" class="block text-xs text-slate-400 font-bold mb-2">首都</span>
                     <span id="question-prompt-text" class="text-2xl font-extrabold text-white"></span>
                 </div>
                 <div id="question-map-container" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 p-2 sm:p-4">
@@ -198,6 +213,7 @@
                 </div>
                 <div class="text-xs text-slate-300 space-y-1 border-t border-slate-700 pt-3 mt-2">
                     <p><span class="text-slate-400">首都:</span> <strong id="country-capital" class="text-slate-100"></strong></p>
+                    <p><span class="text-slate-400">通貨:</span> <strong id="country-currency" class="font-extrabold text-amber-300"></strong></p>
                     <p><span class="text-slate-400">地域:</span> <span id="country-continent" class="text-slate-100"></span></p>
                     <p class="mt-2 text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 leading-relaxed" id="country-fact"></p>
                 </div>
@@ -460,6 +476,69 @@
             { code: 'va', name: 'バチカン市国', capital: 'バチカン', continent: 'ヨーロッパ', difficulty: 'veryhard', fact: '首都はバチカン。国旗と国名をセットで覚えましょう。' }
         ];
 
+        const countriesByCurrency = {
+            AED: ['ae'], AFN: ['af'], ALL: ['al'], AMD: ['am'], AOA: ['ao'], ARS: ['ar'],
+            AUD: ['au', 'ki', 'nr', 'tv'], AZN: ['az'], BAM: ['ba'], BBD: ['bb'], BDT: ['bd'],
+            BHD: ['bh'], BIF: ['bi'], BND: ['bn'], BOB: ['bo'], BRL: ['br'], BSD: ['bs'],
+            BTN: ['bt'], BWP: ['bw'], BYN: ['by'], BZD: ['bz'], CAD: ['ca'], CDF: ['cd'],
+            CHF: ['ch', 'li'], CLP: ['cl'], CNY: ['cn'], COP: ['co'], CRC: ['cr'], CUP: ['cu'],
+            CVE: ['cv'], CZK: ['cz'], DJF: ['dj'], DKK: ['dk'], DOP: ['do'], DZD: ['dz'],
+            EGP: ['eg'], ERN: ['er'], ETB: ['et'], EUR: ['ad', 'at', 'be', 'bg', 'cy', 'de', 'ee', 'es', 'fi', 'fr', 'gr', 'hr', 'ie', 'it', 'lt', 'lu', 'lv', 'mc', 'me', 'mt', 'nl', 'pt', 'si', 'sk', 'sm', 'va'],
+            FJD: ['fj'], GBP: ['gb'], GEL: ['ge'], GHS: ['gh'], GMD: ['gm'], GNF: ['gn'],
+            GTQ: ['gt'], GYD: ['gy'], HNL: ['hn'], HTG: ['ht'], HUF: ['hu'], IDR: ['id'],
+            ILS: ['il', 'ps'], INR: ['in'], IQD: ['iq'], IRR: ['ir'], ISK: ['is'], JMD: ['jm'],
+            JOD: ['jo'], JPY: ['jp'], KES: ['ke'], KGS: ['kg'], KHR: ['kh'], KMF: ['km'],
+            KPW: ['kp'], KRW: ['kr'], KWD: ['kw'], KZT: ['kz'], LAK: ['la'], LBP: ['lb'],
+            LKR: ['lk'], LRD: ['lr'], LSL: ['ls'], LYD: ['ly'], MAD: ['ma'], MDL: ['md'],
+            MGA: ['mg'], MKD: ['mk'], MMK: ['mm'], MNT: ['mn'], MRU: ['mr'], MUR: ['mu'],
+            MVR: ['mv'], MWK: ['mw'], MXN: ['mx'], MYR: ['my'], MZN: ['mz'], NAD: ['na'],
+            NGN: ['ng'], NIO: ['ni'], NOK: ['no'], NPR: ['np'], NZD: ['nz'], OMR: ['om'],
+            PAB: ['pa'], PEN: ['pe'], PGK: ['pg'], PHP: ['ph'], PKR: ['pk'], PLN: ['pl'],
+            PYG: ['py'], QAR: ['qa'], RON: ['ro'], RSD: ['rs'], RUB: ['ru'], RWF: ['rw'],
+            SAR: ['sa'], SBD: ['sb'], SCR: ['sc'], SDG: ['sd'], SEK: ['se'], SGD: ['sg'],
+            SLE: ['sl'], SOS: ['so'], SRD: ['sr'], SSP: ['ss'], STN: ['st'], SYP: ['sy'],
+            SZL: ['sz'], THB: ['th'], TJS: ['tj'], TMT: ['tm'], TND: ['tn'], TOP: ['to'],
+            TRY: ['tr'], TTD: ['tt'], TZS: ['tz'], UAH: ['ua'], UGX: ['ug'],
+            USD: ['ec', 'fm', 'mh', 'pw', 'sv', 'tl', 'us'], UYU: ['uy'], UZS: ['uz'],
+            VES: ['ve'], VND: ['vn'], VUV: ['vu'], WST: ['ws'], XAF: ['cf', 'cg', 'cm', 'ga', 'gq', 'td'],
+            XCD: ['ag', 'dm', 'gd', 'kn', 'lc', 'vc'], XOF: ['bf', 'bj', 'ci', 'gw', 'ml', 'ne', 'sn', 'tg'],
+            YER: ['ye'], ZAR: ['za'], ZMW: ['zm'], ZWG: ['zw']
+        };
+        const currencyByCountryCode = Object.fromEntries(
+            Object.entries(countriesByCurrency).flatMap(([currencyCode, countryCodes]) =>
+                countryCodes.map(countryCode => [countryCode, currencyCode])
+            )
+        );
+        const currencyDisplayNames = new Intl.DisplayNames(['ja'], { type: 'currency' });
+        const currencyDisplayOverrides = {
+            SLE: 'シエラレオネ・レオン',
+            ZWG: 'ジンバブエ・ゴールド（ZiG）'
+        };
+        const currencyUnitOverrides = {
+            AED: 'ディルハム',
+            BAM: '兌換マルク',
+            CNY: '人民元',
+            GBP: 'ポンド',
+            ILS: 'シェケル',
+            JPY: '円',
+            KPW: 'ウォン',
+            KRW: 'ウォン',
+            NIO: 'コルドバ オロ',
+            SLE: 'レオン',
+            USD: 'ドル',
+            ZWG: 'ゴールド'
+        };
+        const majorCurrencyCodes = new Set(['CNY', 'EUR', 'GBP', 'JPY', 'USD']);
+        countryData.forEach(country => {
+            country.currencyCode = currencyByCountryCode[country.code];
+            if (!country.currencyCode) {
+                throw new Error(`通貨データがありません: ${country.name} (${country.code})`);
+            }
+            country.currency = currencyDisplayOverrides[country.currencyCode] || currencyDisplayNames.of(country.currencyCode);
+            country.currencyUnit = currencyUnitOverrides[country.currencyCode]
+                || country.currency.replace(/\s*\([^)]*\)$/, '').trim().split(/\s+/).pop();
+        });
+
         // App State
         let currentDifficulty = 'easy';
         let currentRegion = 'all';
@@ -555,15 +634,18 @@
             document.querySelectorAll('.question-type-btn').forEach(btn => {
                 btn.classList.remove('border-indigo-500', 'bg-indigo-600/30');
                 btn.classList.add('border-slate-700', 'bg-slate-800');
+                btn.setAttribute('aria-pressed', 'false');
             });
             const selected = document.getElementById(`btn-question-${type}`);
             selected.classList.remove('border-slate-700', 'bg-slate-800');
             selected.classList.add('border-indigo-500', 'bg-indigo-600/30');
+            selected.setAttribute('aria-pressed', 'true');
         }
 
         function getAnswerValue(country) {
             if (currentQuestionType === 'flagToCapital') return country.capital;
             if (currentQuestionType === 'capitalToFlag') return country.code;
+            if (currentQuestionType === 'countryToCurrency') return country.currencyCode;
             return country.name;
         }
 
@@ -707,9 +789,20 @@
             flagContainer.classList.add('hidden');
             questionPrompt.classList.add('hidden');
             mapContainer.classList.add('hidden');
-            if (currentQuestionType === 'capitalToFlag') {
+            if (currentQuestionType === 'capitalToFlag' || currentQuestionType === 'currencyToCountry' || currentQuestionType === 'countryToCurrency') {
                 questionPrompt.classList.remove('hidden');
-                document.getElementById('question-prompt-text').textContent = current.capital;
+                const promptLabel = document.getElementById('question-prompt-label');
+                const promptText = document.getElementById('question-prompt-text');
+                if (currentQuestionType === 'capitalToFlag') {
+                    promptLabel.textContent = '首都';
+                    promptText.textContent = current.capital;
+                } else if (currentQuestionType === 'currencyToCountry') {
+                    promptLabel.textContent = 'この通貨を使っている国は？';
+                    promptText.textContent = majorCurrencyCodes.has(current.currencyCode) ? current.currency : current.currencyUnit;
+                } else {
+                    promptLabel.textContent = '国名';
+                    promptText.textContent = current.name;
+                }
             } else if (currentQuestionType === 'mapToCountry') {
                 mapContainer.classList.remove('hidden');
                 renderWorldMap(current);
@@ -724,6 +817,9 @@
 
             const correctAnswer = getAnswerValue(current);
             let candidates = countryData.filter(c => c.name !== current.name && getAnswerValue(c) !== correctAnswer);
+            if (currentQuestionType === 'currencyToCountry') {
+                candidates = candidates.filter(c => c.currencyCode !== current.currencyCode);
+            }
             const targetRegion = (currentRegion !== 'all') ? currentRegion : current.continent;
             const targetDifficulty = (currentDifficulty !== 'all') ? currentDifficulty : current.difficulty;
 
@@ -760,7 +856,15 @@
             });
 
             // 上位3件を誤答ダミーとして採用
-            const wrongChoices = candidates.slice(0, 3);
+            const wrongChoices = [];
+            const usedChoiceValues = new Set([currentQuestionType === 'countryToCurrency' ? current.currencyUnit : correctAnswer]);
+            for (const candidate of candidates) {
+                const choiceValue = currentQuestionType === 'countryToCurrency' ? candidate.currencyUnit : getAnswerValue(candidate);
+                if (usedChoiceValues.has(choiceValue)) continue;
+                usedChoiceValues.add(choiceValue);
+                wrongChoices.push(candidate);
+                if (wrongChoices.length === 3) break;
+            }
             
             const options = [...wrongChoices, current].sort(() => Math.random() - 0.5);
 
@@ -776,6 +880,8 @@
                     btn.classList.add('p-3');
                     btn.setAttribute('aria-label', '国旗の選択肢');
                     btn.innerHTML = `<img src="https://flagcdn.com/w320/${opt.code}.png" alt="" class="w-full h-20 sm:h-24 object-cover rounded-lg">`;
+                } else if (currentQuestionType === 'countryToCurrency') {
+                    btn.textContent = opt.currencyUnit;
                 } else {
                     btn.textContent = getAnswerValue(opt);
                 }
@@ -867,6 +973,10 @@
                 hintEl.textContent = `💡 ヒント: 地域は「${current.continent}」`;
             } else if (currentQuestionType === 'mapToCountry') {
                 hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
+            } else if (currentQuestionType === 'currencyToCountry') {
+                hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
+            } else if (currentQuestionType === 'countryToCurrency') {
+                hintEl.textContent = `💡 ヒント: 地域は「${current.continent}」`;
             } else {
                 hintEl.textContent = `💡 ヒント: 首都は「${current.capital}」 / 地域: ${current.continent}`;
             }
@@ -924,6 +1034,7 @@
 
             document.getElementById('country-title').textContent = countryObj.name;
             document.getElementById('country-capital').textContent = countryObj.capital;
+            document.getElementById('country-currency').textContent = countryObj.currency;
             document.getElementById('country-continent').textContent = countryObj.continent;
             document.getElementById('country-fact').textContent = countryObj.fact;
 
