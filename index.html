@@ -171,6 +171,13 @@
                 <div id="question-prompt" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 px-5 py-8 text-center">
                     <span id="question-prompt-label" class="block text-xs text-slate-400 font-bold mb-2">首都</span>
                     <span id="question-prompt-text" class="text-2xl font-extrabold text-white"></span>
+                    <div id="currency-image-container" class="hidden mt-5">
+                        <div class="mx-auto max-w-md overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
+                            <img id="currency-image" class="hidden max-h-56 w-full object-contain" alt="出題されている通貨の紙幣・硬貨">
+                        </div>
+                        <p id="currency-image-status" role="status" class="mt-2 text-xs text-slate-400"></p>
+                        <p id="currency-image-credit" class="hidden mt-1 text-xs text-slate-500"></p>
+                    </div>
                 </div>
                 <div id="question-map-container" class="hidden my-4 w-full rounded-2xl bg-slate-900 border border-slate-700 p-2 sm:p-4">
                     <p class="text-center text-sm font-bold text-slate-300 mb-2">青く示された国の名前は？</p>
@@ -214,6 +221,13 @@
                 <div class="text-xs text-slate-300 space-y-1 border-t border-slate-700 pt-3 mt-2">
                     <p><span class="text-slate-400">首都:</span> <strong id="country-capital" class="text-slate-100"></strong></p>
                     <p><span class="text-slate-400">通貨:</span> <strong id="country-currency" class="font-extrabold text-amber-300"></strong></p>
+                    <div id="explanation-currency-image-container" class="hidden mt-3">
+                        <div class="max-w-md overflow-hidden rounded-xl border border-slate-700 bg-slate-900">
+                            <img id="explanation-currency-image" class="hidden max-h-56 w-full object-contain" alt="解説に表示する通貨の紙幣・硬貨">
+                        </div>
+                        <p id="explanation-currency-image-status" role="status" class="mt-2 text-xs text-slate-400"></p>
+                        <p id="explanation-currency-image-credit" class="hidden mt-1 text-xs text-slate-500"></p>
+                    </div>
                     <p><span class="text-slate-400">地域:</span> <span id="country-continent" class="text-slate-100"></span></p>
                     <p class="mt-2 text-slate-300 bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 leading-relaxed" id="country-fact"></p>
                 </div>
@@ -510,6 +524,11 @@
             )
         );
         const currencyDisplayNames = new Intl.DisplayNames(['ja'], { type: 'currency' });
+        const currencySearchNames = new Intl.DisplayNames(['en'], { type: 'currency' });
+        const currencyImageCache = new Map();
+        const currencyImageSearchOverrides = {
+            USD: 'United States dollar banknotes'
+        };
         const currencyDisplayOverrides = {
             SLE: 'シエラレオネ・レオン',
             ZWG: 'ジンバブエ・ゴールド（ZiG）'
@@ -649,6 +668,114 @@
             return country.name;
         }
 
+        function getCurrencyImage(currencyCode) {
+            if (currencyImageCache.has(currencyCode)) return currencyImageCache.get(currencyCode);
+
+            const searchName = currencyImageSearchOverrides[currencyCode] || currencySearchNames.of(currencyCode);
+            const query = encodeURIComponent(`${searchName} banknote`);
+            const request = fetch(`https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${query}&gsrnamespace=6&gsrlimit=5&prop=imageinfo&iiprop=url%7Cextmetadata&iiurlwidth=640&format=json&origin=*`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`通貨画像の検索に失敗しました (${response.status})。`);
+                    return response.json();
+                })
+                .then(data => {
+                    const pages = Object.values(data.query?.pages || {});
+                    const page = pages.find(result => {
+                        const info = result.imageinfo?.[0];
+                        const metadata = info?.extmetadata || {};
+                        const licenseUrl = (metadata.LicenseUrl?.value || '').replace(/^http:\/\//i, 'https://');
+                        return (info?.thumburl?.startsWith('https://upload.wikimedia.org/')
+                            || info?.thumburl?.startsWith('https://thumb.wikimedia.org/'))
+                            && info.descriptionurl?.startsWith('https://commons.wikimedia.org/')
+                            && metadata.LicenseShortName?.value
+                            && (!licenseUrl || /^https:\/\//.test(licenseUrl))
+                            && !(currencyCode === 'USD' && /confederate/i.test(result.title));
+                    });
+                    if (!page) throw new Error('利用できる通貨画像が見つかりませんでした。');
+
+                    const info = page.imageinfo[0];
+                    const metadata = info.extmetadata;
+                    const artist = metadata.Artist?.value
+                        ?.replace(/<span[^>]*display:\s*none[^>]*>[\s\S]*?<\/span>/gi, '')
+                        .replace(/<[^>]*>/g, '')
+                        .trim();
+                    return {
+                        imageUrl: info.thumburl,
+                        descriptionUrl: info.descriptionurl,
+                        title: page.title.replace(/^File:/, ''),
+                        license: metadata.LicenseShortName.value,
+                        licenseUrl: metadata.LicenseUrl?.value?.replace(/^http:\/\//i, 'https://') || info.descriptionurl,
+                        artist
+                    };
+                });
+            currencyImageCache.set(currencyCode, request);
+            request.catch(() => currencyImageCache.delete(currencyCode));
+            return request;
+        }
+
+        async function renderCurrencyImage(country) {
+            const container = document.getElementById('currency-image-container');
+            const image = document.getElementById('currency-image');
+            const status = document.getElementById('currency-image-status');
+            const credit = document.getElementById('currency-image-credit');
+            await renderCurrencyImageInto(country, container, image, status, credit, 'currencyToCountry');
+        }
+
+        async function renderExplanationCurrencyImage(country) {
+            const container = document.getElementById('explanation-currency-image-container');
+            const image = document.getElementById('explanation-currency-image');
+            const status = document.getElementById('explanation-currency-image-status');
+            const credit = document.getElementById('explanation-currency-image-credit');
+            await renderCurrencyImageInto(country, container, image, status, credit, 'countryToCurrency');
+        }
+
+        async function renderCurrencyImageInto(country, container, image, status, credit, requiredQuestionType) {
+            container.classList.remove('hidden');
+            image.classList.add('hidden');
+            image.removeAttribute('src');
+            credit.classList.add('hidden');
+            status.textContent = '通貨の画像を読み込み中...';
+            try {
+                const result = await getCurrencyImage(country.currencyCode);
+                if (quizQuestions[currentIndex]?.code !== country.code || currentQuestionType !== requiredQuestionType) return;
+
+                image.onload = () => {
+                    if (quizQuestions[currentIndex]?.code !== country.code || currentQuestionType !== requiredQuestionType) return;
+                    image.classList.remove('hidden');
+                    status.textContent = '';
+                };
+                image.onerror = () => {
+                    if (quizQuestions[currentIndex]?.code !== country.code || currentQuestionType !== requiredQuestionType) return;
+                    image.classList.add('hidden');
+                    status.textContent = '通貨画像を表示できませんでした。通貨名から回答してください。';
+                };
+                image.alt = `${country.currency}の紙幣・硬貨 (${result.title})`;
+                image.src = result.imageUrl;
+
+                const creditParts = [`画像: ${result.title}`, result.artist, result.license].filter(Boolean);
+                credit.replaceChildren();
+                const sourceLink = document.createElement('a');
+                sourceLink.href = result.descriptionUrl;
+                sourceLink.target = '_blank';
+                sourceLink.rel = 'noopener noreferrer';
+                sourceLink.textContent = creditParts.join(' / ');
+                sourceLink.className = 'underline hover:text-slate-300';
+                credit.appendChild(sourceLink);
+                const licenseLink = document.createElement('a');
+                licenseLink.href = result.licenseUrl;
+                licenseLink.target = '_blank';
+                licenseLink.rel = 'noopener noreferrer';
+                licenseLink.textContent = ` (${result.license})`;
+                licenseLink.className = 'underline hover:text-slate-300';
+                credit.appendChild(licenseLink);
+                credit.classList.remove('hidden');
+            } catch (error) {
+                console.error('通貨画像を読み込めませんでした。', error);
+                if (quizQuestions[currentIndex]?.code !== country.code || currentQuestionType !== requiredQuestionType) return;
+                status.textContent = '通貨画像を読み込めませんでした。通貨名から回答してください。';
+            }
+        }
+
         async function ensureWorldMapLoaded() {
             if (worldMapFeatures) return;
             if (!window.d3) {
@@ -786,6 +913,8 @@
             const questionPrompt = document.getElementById('question-prompt');
             const mapContainer = document.getElementById('question-map-container');
             const imgEl = document.getElementById('flag-img');
+            document.getElementById('currency-image-container').classList.add('hidden');
+            document.getElementById('explanation-currency-image-container').classList.add('hidden');
             flagContainer.classList.add('hidden');
             questionPrompt.classList.add('hidden');
             mapContainer.classList.add('hidden');
@@ -799,6 +928,7 @@
                 } else if (currentQuestionType === 'currencyToCountry') {
                     promptLabel.textContent = 'この通貨を使っている国は？';
                     promptText.textContent = majorCurrencyCodes.has(current.currencyCode) ? current.currency : current.currencyUnit;
+                    renderCurrencyImage(current);
                 } else {
                     promptLabel.textContent = '国名';
                     promptText.textContent = current.name;
@@ -1037,6 +1167,10 @@
             document.getElementById('country-currency').textContent = countryObj.currency;
             document.getElementById('country-continent').textContent = countryObj.continent;
             document.getElementById('country-fact').textContent = countryObj.fact;
+            document.getElementById('explanation-currency-image-container').classList.add('hidden');
+            if (currentQuestionType === 'countryToCurrency') {
+                renderExplanationCurrencyImage(countryObj);
+            }
 
             box.classList.remove('hidden');
         }
